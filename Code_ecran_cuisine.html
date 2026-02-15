@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cuisine - Pizza Bello</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lobster&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #0f172a; color: white; font-family: 'Inter', sans-serif; }
+        .logo-font { font-family: 'Lobster', cursive; }
+        .column-container { background: rgba(30, 41, 59, 0.3); min-height: 80vh; border-radius: 20px; padding: 12px; border: 1px solid rgba(255,255,255,0.05); }
+        .order-card { background: white; color: #1e293b; border-radius: 16px; padding: 15px; margin-bottom: 15px; border-left: 8px solid #3b82f6; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+        .status-processing { border-left-color: #f97316; }
+        .status-ready { border-left-color: #22c55e; }
+        .pizza-item { background: #f1f5f9; border-radius: 8px; padding: 6px 10px; margin-bottom: 4px; border-left: 3px solid #3b82f6; }
+        .pizza-name { font-weight: 800; text-transform: uppercase; color: #0f172a; font-size: 0.95rem; }
+        .pizza-size { color: #3b82f6; font-weight: 800; font-size: 0.7rem; float: right; background: white; padding: 1px 6px; border-radius: 4px; border: 1px solid #e2e8f0; }
+        .city-badge { background: #fee2e2; color: #dc2626; padding: 2px 8px; border-radius: 6px; font-weight: 900; text-transform: uppercase; font-size: 0.8rem; display: inline-block; margin-top: 4px; }
+        .btn-time { background: #3b82f6; color: white; padding: 8px 0; border-radius: 10px; font-weight: 900; font-size: 0.75rem; transition: all 0.2s; }
+        .btn-time:hover { background: #2563eb; transform: translateY(-2px); }
+        .order-time { background: #1e293b; color: white; padding: 4px 10px; border-radius: 8px; font-weight: 900; font-size: 14px; }
+        .step-badge { background: rgba(255,255,255,0.1); padding: 2px 10px; border-radius: 20px; font-size: 12px; margin-left: auto; }
+        
+        /* Nouveau Badge Type de Commande */
+        .type-badge { font-weight: 900; font-size: 10px; padding: 4px 8px; border-radius: 8px; display: flex; items-center: center; gap: 4px; border: 1.5px solid; }
+        .type-livraison { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
+        .type-emporter { color: #2563eb; border-color: #bfdbfe; background: #eff6ff; }
+        .type-place { color: #16a34a; border-color: #bbf7d0; background: #f0fdf4; }
+
+        /* Animation Point Rouge */
+        .dot-pulse { animation: pulseCustom 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulseCustom { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    </style>
+</head>
+<body>
+
+    <div id="lock-screen" class="fixed inset-0 bg-[#0f172a] z-[100] flex items-center justify-center p-4">
+        <div class="bg-slate-900 p-8 rounded-3xl border border-slate-800 shadow-2xl w-full max-w-[320px] text-center">
+            <span class="text-5xl mb-2 block">🍕</span>
+            <h1 class="logo-font text-4xl text-white mb-6">Pizza <span class="text-red-500">Bella</span></h1>
+            <input type="password" id="pin-input" inputmode="numeric" placeholder="PIN" class="bg-slate-800 border-2 border-slate-700 rounded-xl p-3 text-center text-2xl w-full mb-4 text-white tracking-[0.3em] outline-none focus:border-red-500">
+            <button onclick="checkAccess()" class="w-full bg-red-600 text-white font-black py-3 rounded-xl uppercase tracking-widest shadow-lg active:scale-95 transition-all">Entrer</button>
+        </div>
+    </div>
+
+    <div id="main-app" class="hidden min-h-screen flex flex-col">
+        <header class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900 sticky top-0 z-50">
+            <div class="flex items-center gap-3">
+                <span class="text-3xl">🍕</span>
+                <h1 class="logo-font text-2xl text-white">Pizza Bella</h1>
+            </div>
+            <div class="flex items-center gap-2 bg-slate-800 px-4 py-1.5 rounded-full border border-slate-700">
+                <span class="w-2.5 h-2.5 bg-red-600 rounded-full dot-pulse"></span>
+                <span class="font-black text-xs tracking-widest text-white uppercase">LIVE</span>
+            </div>
+        </header>
+
+        <main class="p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+                <h3 class="font-black uppercase text-sm text-blue-400 mb-3 flex items-center">
+                    <span class="w-2 h-2 bg-blue-500 rounded-full dot-pulse mr-2"></span> À VALIDER 
+                    <span id="count-pending" class="step-badge text-blue-300">0</span>
+                </h3>
+                <div id="col-pending" class="column-container"></div>
+            </div>
+            <div>
+                <h3 class="font-black uppercase text-sm text-orange-400 mb-3 flex items-center">
+                    <span class="w-2 h-2 bg-orange-500 rounded-full dot-pulse mr-2"></span> EN CUISINE 
+                    <span id="count-processing" class="step-badge text-orange-300">0</span>
+                </h3>
+                <div id="col-processing" class="column-container"></div>
+            </div>
+            <div>
+                <h3 class="font-black uppercase text-sm text-green-400 mb-3 flex items-center">
+                    <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span> PRÊTES 
+                    <span id="count-ready" class="step-badge text-green-300">0</span>
+                </h3>
+                <div id="col-ready" class="column-container"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://bhtnjevdjntnzrxaksde.supabase.co"; 
+        const SUPABASE_KEY = "sb_publishable_kJUhaTAw4xBCW0e3f5ketg_n_HcboDn"; 
+        const ACCESS_PIN = "1234";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        function checkAccess() {
+            if (document.getElementById('pin-input').value === ACCESS_PIN) {
+                document.getElementById('lock-screen').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                startSystem();
+            } else { alert("Code PIN incorrect"); }
+        }
+
+        function startSystem() { loadData(); setInterval(loadData, 8000); }
+
+        async function loadData() {
+            const { data, error } = await _supabase.from('orders').select('*, clients(*)').neq('status', 'delivered').order('created_at', { ascending: false });
+            if (!error) renderUI(data);
+        }
+
+        function formatPizzas(notes) {
+            let items = [];
+            try { items = typeof notes === 'string' ? JSON.parse(notes) : notes; } catch (e) { return `<div class="pizza-item"><span class="pizza-name">${notes}</span></div>`; }
+            if (!Array.isArray(items)) return `<div class="pizza-item"><span class="pizza-name">${notes}</span></div>`;
+            return items.map(p => `
+                <div class="pizza-item">
+                    <span class="pizza-size">${p.size || 'G'}</span>
+                    <span class="pizza-name">${p.name}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderUI(orders) {
+            const zones = { 'pending': document.getElementById('col-pending'), 'processing': document.getElementById('col-processing'), 'ready-to-deliver': document.getElementById('col-ready') };
+            const counts = { 'pending': 0, 'processing': 0, 'ready-to-deliver': 0 };
+            Object.values(zones).forEach(z => z.innerHTML = '');
+
+            orders.forEach(order => {
+                const status = order.status || 'pending';
+                if(counts.hasOwnProperty(status)) counts[status]++;
+
+                const type = (order.order_type || "").toLowerCase();
+                let typeHTML = "";
+                if (type.includes("livraison")) {
+                    typeHTML = `<span class="type-badge type-livraison">🚚 LIVRAISON</span>`;
+                } else if (type.includes("emporter")) {
+                    typeHTML = `<span class="type-badge type-emporter">🛍️ EMPORTER</span>`;
+                } else {
+                    typeHTML = `<span class="type-badge type-place">🍽️ SUR PLACE</span>`;
+                }
+
+                const dateObj = new Date(order.created_at);
+                const timeStr = dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
+                
+                const card = document.createElement('div');
+                card.className = `order-card ${status === 'processing' ? 'status-processing' : (status === 'ready-to-deliver' ? 'status-ready' : '')}`;
+                
+                let btns = "";
+                if (status === 'pending') {
+                    btns = `<div class="grid grid-cols-3 gap-2 mt-3">
+                        <button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">10M</button>
+                        <button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">20M</button>
+                        <button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">30M</button>
+                    </div>`;
+                } else if (status === 'processing') {
+                    btns = `<button onclick="updateStatus('${order.id}', 'ready-to-deliver')" class="w-full mt-3 bg-orange-500 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">PRÊT ✅</button>`;
+                } else {
+                    btns = `<button onclick="updateStatus('${order.id}', 'delivered')" class="w-full mt-3 bg-green-600 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">TERMINER</button>`;
+                }
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-2 border-b pb-2">
+                        <span class="order-time">${timeStr}</span>
+                        <span class="text-lg font-black text-red-600">${parseFloat(order.total || 0).toFixed(2)}€</span>
+                    </div>
+                    <div class="mb-3">${formatPizzas(order.delivery_notes)}</div>
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-[11px]">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-black text-slate-900 uppercase truncate mr-1">👤 ${order.clients?.name || 'Client'}</span>
+                            ${typeHTML}
+                        </div>
+                        <div class="text-slate-500 font-bold mb-1 italic">📞 ${order.clients?.phone_number || 'N/A'}</div>
+                        <div class="border-t pt-1 mt-1">
+                            <span class="block text-slate-700 leading-tight">📍 <b>${order.delivery_street || 'Boutique'}</b></span>
+                            <span class="city-badge">${order.delivery_city || ''}</span>
+                        </div>
+                    </div>
+                    ${btns}
+                `;
+                (zones[status] || zones['pending']).appendChild(card);
+            });
+
+            document.getElementById('count-pending').innerText = counts['pending'];
+            document.getElementById('count-processing').innerText = counts['processing'];
+            document.getElementById('count-ready').innerText = counts['ready-to-deliver'];
+        }
+
+        async function updateStatus(orderId, newStatus) {
+            const { error } = await _supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
+            if (!error) loadData();
+        }
+    </script>
+</body>
+</html>
