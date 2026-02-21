@@ -22,18 +22,12 @@
         .btn-time:hover { background: #2563eb; transform: translateY(-2px); }
         .order-time { background: #1e293b; color: white; padding: 4px 10px; border-radius: 8px; font-weight: 900; font-size: 14px; }
         .step-badge { background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; font-size: 1.2rem; margin-left: auto; }
-        
-        /* Nouveau Badge Type de Commande */
         .type-badge { font-weight: 900; font-size: 10px; padding: 4px 8px; border-radius: 8px; display: flex; items-center: center; gap: 4px; border: 1.5px solid; }
         .type-livraison { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
         .type-emporter { color: #2563eb; border-color: #bfdbfe; background: #eff6ff; }
         .type-place { color: #16a34a; border-color: #bbf7d0; background: #f0fdf4; }
-
-        /* Animation Point Rouge */
         .dot-pulse { animation: pulseCustom 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         @keyframes pulseCustom { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-        /* Taille des titres de colonnes augmentée */
         .column-title { font-size: 1.8rem; font-weight: 900; }
     </style>
 </head>
@@ -86,24 +80,46 @@
     </div>
 
     <script>
-        const SUPABASE_URL = "https://bhtnjevdjntnzrxaksde.supabase.co"; 
+        const SUPABASE_URL = "https://bhtnjevdjntnzrxaksde.supabase.co";
         const SUPABASE_KEY = "sb_publishable_kJUhaTAw4xBCW0e3f5ketg_n_HcboDn"; 
         const ACCESS_PIN = "1234";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // --- AJOUT ALERT SONORE ---
+        const audioAlert = new Audio('./alerte.mp3');
+        let lastOrderCount = 0;
+        let isFirstLoad = true;
+
         function checkAccess() {
             if (document.getElementById('pin-input').value === ACCESS_PIN) {
+                // Débloque l'audio sur navigateur suite au clic utilisateur
+                audioAlert.play().then(() => {
+                    audioAlert.pause();
+                    audioAlert.currentTime = 0;
+                }).catch(e => console.log("Audio en attente"));
+
                 document.getElementById('lock-screen').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
                 startSystem();
             } else { alert("Code PIN incorrect"); }
         }
 
-        function startSystem() { loadData(); setInterval(loadData, 8000); }
+        function startSystem() { 
+            loadData();
+            setInterval(loadData, 8000); 
+        }
 
         async function loadData() {
             const { data, error } = await _supabase.from('orders').select('*, clients(*)').neq('status', 'delivered').order('created_at', { ascending: false });
-            if (!error) renderUI(data);
+            if (!error) {
+                // Détection d'une nouvelle commande (si le nombre total augmente)
+                if (!isFirstLoad && data.length > lastOrderCount) {
+                    audioAlert.play().catch(e => console.error("Erreur audio:", e));
+                }
+                lastOrderCount = data.length;
+                isFirstLoad = false;
+                renderUI(data);
+            }
         }
 
         function formatPizzas(notes) {
@@ -122,7 +138,6 @@
             const zones = { 'pending': document.getElementById('col-pending'), 'processing': document.getElementById('col-processing'), 'ready-to-deliver': document.getElementById('col-ready') };
             const counts = { 'pending': 0, 'processing': 0, 'ready-to-deliver': 0 };
             Object.values(zones).forEach(z => z.innerHTML = '');
-
             orders.forEach(order => {
                 const status = order.status || 'pending';
                 if(counts.hasOwnProperty(status)) counts[status]++;
