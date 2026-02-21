@@ -180,8 +180,8 @@
                 
                 let btns = status === 'pending' ? `<div class="grid grid-cols-3 gap-2 mt-3"><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">10M</button><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">20M</button><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">30M</button></div>` : (status === 'processing' ? `<button onclick="updateStatus('${order.id}', 'ready-to-deliver')" class="w-full mt-3 bg-orange-500 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">PRÊT ✅</button>` : `<button onclick="updateStatus('${order.id}', 'delivered')" class="w-full mt-3 bg-green-600 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">TERMINER</button>`);
                 
-                // L'adresse sobre : Numéro Rue - Ville
-                const adresseComplete = `${order.delivery_street_number || ''} ${order.delivery_street || 'Boutique'} ${order.delivery_city ? '- ' + order.delivery_city : ''}`.trim();
+                // Adresse complète : Numéro Rue - Ville CP
+                const adresseComplete = `${order.delivery_street_number || ''} ${order.delivery_street || 'Boutique'} ${order.delivery_city ? '- ' + order.delivery_city : ''} ${order.delivery_postal_code || ''}`.trim();
 
                 card.innerHTML = `
                     <div class="flex justify-between items-center mb-2 border-b pb-2">
