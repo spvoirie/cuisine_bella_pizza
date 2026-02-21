@@ -180,8 +180,8 @@
                 
                 let btns = status === 'pending' ? `<div class="grid grid-cols-3 gap-2 mt-3"><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">10M</button><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">20M</button><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">30M</button></div>` : (status === 'processing' ? `<button onclick="updateStatus('${order.id}', 'ready-to-deliver')" class="w-full mt-3 bg-orange-500 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">PRÊT ✅</button>` : `<button onclick="updateStatus('${order.id}', 'delivered')" class="w-full mt-3 bg-green-600 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">TERMINER</button>`);
                 
-                // Calcul de l'adresse propre : Numéro + Rue + Ville
-                const fullAddress = `${order.delivery_house_number || ''} ${order.delivery_street || 'Boutique'} ${order.delivery_city ? '- ' + order.delivery_city : ''}`.trim();
+                // On formate l'adresse ici de manière sobre : Numéro Rue - Ville
+                const adresseComplete = `${order.delivery_street_number || ''} ${order.delivery_street || 'Boutique'} ${order.delivery_city ? '- ' + order.delivery_city : ''}`.trim();
 
                 card.innerHTML = `
                     <div class="flex justify-between items-center mb-2 border-b pb-2">
@@ -196,7 +196,7 @@
                         </div>
                         <div class="text-slate-500 font-bold mb-1 italic">📞 ${order.clients?.phone_number || 'N/A'}</div>
                         <div class="border-t pt-1 mt-1">
-                            <span class="block text-slate-700 leading-tight font-bold">📍 ${fullAddress}</span>
+                            <span class="block text-slate-700 leading-tight font-bold">📍 ${adresseComplete}</span>
                         </div>
                     </div>
                     ${btns}
