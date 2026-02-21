@@ -28,14 +28,8 @@
         .type-place { color: #16a34a; border-color: #bbf7d0; background: #f0fdf4; }
         .dot-pulse { animation: pulseCustom 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         @keyframes pulseCustom { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-        
-        /* --- NOUVELLE ANIMATION FLASH ROUGE --- */
-        @keyframes flashRed {
-            0%, 100% { background-color: #0f172a; }
-            50% { background-color: #dc2626; }
-        }
-        .alert-flash { animation: flashRed 0.8s ease-in-out 5; } /* Flash 5 fois */
-        
+        @keyframes flashRed { 0%, 100% { background-color: #0f172a; } 50% { background-color: #dc2626; } }
+        .alert-flash { animation: flashRed 0.8s ease-in-out 5; }
         .column-title { font-size: 1.8rem; font-weight: 900; }
     </style>
 </head>
@@ -46,18 +40,18 @@
             <span class="text-5xl mb-2 block">🍕</span>
             <h1 class="logo-font text-4xl text-white mb-6">Pizza <span class="text-red-500">Bella</span></h1>
             <input type="password" id="pin-input" inputmode="numeric" placeholder="PIN" class="bg-slate-800 border-2 border-slate-700 rounded-xl p-3 text-center text-2xl w-full mb-4 text-white tracking-[0.3em] outline-none focus:border-red-500">
-            <button onclick="checkAccess()" class="w-full bg-red-600 text-white font-black py-3 rounded-xl uppercase tracking-widest shadow-lg active:scale-95 transition-all">Entrer</button>
+            <button id="btn-entrer" onclick="checkAccess()" class="w-full bg-red-600 text-white font-black py-3 rounded-xl uppercase tracking-widest shadow-lg active:scale-95 transition-all">Entrer</button>
         </div>
     </div>
 
     <div id="main-app" class="hidden min-h-screen flex flex-col">
-        <header id="header-main" class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900 sticky top-0 z-50 transition-colors duration-300">
+        <header id="header-main" class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900 sticky top-0 z-50">
             <div class="flex items-center gap-3">
                 <span class="text-3xl">🍕</span>
                 <h1 class="logo-font text-2xl text-white">Pizza Bella</h1>
             </div>
             <div class="flex items-center gap-2 bg-slate-800 px-4 py-1.5 rounded-full border border-slate-700">
-                <span id="live-dot" class="w-2.5 h-2.5 bg-red-600 rounded-full dot-pulse"></span>
+                <span class="w-2.5 h-2.5 bg-red-600 rounded-full dot-pulse"></span>
                 <span class="font-black text-xs tracking-widest text-white uppercase">LIVE</span>
             </div>
         </header>
@@ -90,7 +84,6 @@
     <script>
         const SUPABASE_URL = "https://bhtnjevdjntnzrxaksde.supabase.co";
         const SUPABASE_KEY = "sb_publishable_kJUhaTAw4xBCW0e3f5ketg_n_HcboDn"; 
-        const ACCESS_PIN = "1234";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const audioAlert = new Audio('./alerte.mp3');
@@ -98,19 +91,40 @@
         let isFirstLoad = true;
 
         async function checkAccess() {
-            if (document.getElementById('pin-input').value === ACCESS_PIN) {
-                audioAlert.muted = true;
-                try {
+            const btn = document.getElementById('btn-entrer');
+            const pinSaisi = document.getElementById('pin-input').value;
+            btn.innerText = "VÉRIFICATION...";
+            btn.disabled = true;
+            
+            try {
+                // On vérifie le PIN dans la table config_securite sur Supabase
+                const { data, error } = await _supabase
+                    .from('config_securite')
+                    .select('valeur_cle')
+                    .eq('nom_cle', 'pin_cuisine')
+                    .single();
+
+                if (data && data.valeur_cle === pinSaisi) {
+                    // CORRECTIF SON IPAD
+                    audioAlert.muted = true;
                     await audioAlert.play();
                     audioAlert.pause();
                     audioAlert.muted = false;
                     audioAlert.currentTime = 0;
-                } catch (e) { console.log("Init audio iPad"); }
 
-                document.getElementById('lock-screen').classList.add('hidden');
-                document.getElementById('main-app').classList.remove('hidden');
-                startSystem();
-            } else { alert("Code PIN incorrect"); }
+                    document.getElementById('lock-screen').classList.add('hidden');
+                    document.getElementById('main-app').classList.remove('hidden');
+                    startSystem();
+                } else {
+                    alert("Code PIN incorrect");
+                    btn.innerText = "ENTRER";
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                alert("Erreur de connexion");
+                btn.innerText = "ENTRER";
+                btn.disabled = false;
+            }
         }
 
         function startSystem() { 
@@ -122,8 +136,8 @@
             const { data, error } = await _supabase.from('orders').select('*, clients(*)').neq('status', 'delivered').order('created_at', { ascending: false });
             if (!error) {
                 if (!isFirstLoad && data.length > lastOrderCount) {
-                    triggerVisualAlert(); // Déclenche le flash visuel
-                    audioAlert.play().catch(e => console.error("Erreur lecture iPad:", e));
+                    triggerVisualAlert();
+                    audioAlert.play().catch(e => console.error("Erreur audio:", e));
                 }
                 lastOrderCount = data.length;
                 isFirstLoad = false;
@@ -131,14 +145,10 @@
             }
         }
 
-        // --- FONCTION ALERTE VISUELLE ---
         function triggerVisualAlert() {
             const header = document.getElementById('header-main');
             header.classList.add('alert-flash');
-            // On retire la classe après l'animation (4 secondes) pour pouvoir la relancer plus tard
-            setTimeout(() => {
-                header.classList.remove('alert-flash');
-            }, 4000);
+            setTimeout(() => { header.classList.remove('alert-flash'); }, 4000);
         }
 
         function formatPizzas(notes) {
@@ -157,61 +167,26 @@
             const zones = { 'pending': document.getElementById('col-pending'), 'processing': document.getElementById('col-processing'), 'ready-to-deliver': document.getElementById('col-ready') };
             const counts = { 'pending': 0, 'processing': 0, 'ready-to-deliver': 0 };
             Object.values(zones).forEach(z => z.innerHTML = '');
+            
             orders.forEach(order => {
                 const status = order.status || 'pending';
                 if(counts.hasOwnProperty(status)) counts[status]++;
 
                 const type = (order.order_type || "").toLowerCase();
-                let typeHTML = "";
-                if (type.includes("livraison")) {
-                    typeHTML = `<span class="type-badge type-livraison">🛵 LIVRAISON</span>`;
-                } else if (type.includes("emporter")) {
-                    typeHTML = `<span class="type-badge type-emporter">🛍️ EMPORTER</span>`;
-                } else {
-                    typeHTML = `<span class="type-badge type-place">🍽️ SUR PLACE</span>`;
-                }
-
+                let typeHTML = type.includes("livraison") ? `<span class="type-badge type-livraison">🛵 LIVRAISON</span>` : (type.includes("emporter") ? `<span class="type-badge type-emporter">🛍️ EMPORTER</span>` : `<span class="type-badge type-place">🍽️ SUR PLACE</span>`);
+                
                 const dateObj = new Date(order.created_at);
                 const timeStr = dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
                 
                 const card = document.createElement('div');
                 card.className = `order-card ${status === 'processing' ? 'status-processing' : (status === 'ready-to-deliver' ? 'status-ready' : '')}`;
                 
-                let btns = "";
-                if (status === 'pending') {
-                    btns = `<div class="grid grid-cols-3 gap-2 mt-3">
-                        <button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">10M</button>
-                        <button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">20M</button>
-                        <button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">30M</button>
-                    </div>`;
-                } else if (status === 'processing') {
-                    btns = `<button onclick="updateStatus('${order.id}', 'ready-to-deliver')" class="w-full mt-3 bg-orange-500 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">PRÊT ✅</button>`;
-                } else {
-                    btns = `<button onclick="updateStatus('${order.id}', 'delivered')" class="w-full mt-3 bg-green-600 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">TERMINER</button>`;
-                }
-
-                card.innerHTML = `
-                    <div class="flex justify-between items-center mb-2 border-b pb-2">
-                        <span class="order-time">${timeStr}</span>
-                        <span class="text-lg font-black text-red-600">${parseFloat(order.total || 0).toFixed(2)}€</span>
-                    </div>
-                    <div class="mb-3">${formatPizzas(order.delivery_notes)}</div>
-                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-[11px]">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="font-black text-slate-900 uppercase truncate mr-1">👤 ${order.clients?.name || 'Client'}</span>
-                            ${typeHTML}
-                        </div>
-                        <div class="text-slate-500 font-bold mb-1 italic">📞 ${order.clients?.phone_number || 'N/A'}</div>
-                        <div class="border-t pt-1 mt-1">
-                            <span class="block text-slate-700 leading-tight">📍 <b>${order.delivery_street || 'Boutique'}</b></span>
-                            <span class="city-badge">${order.delivery_city || ''}</span>
-                        </div>
-                    </div>
-                    ${btns}
-                `;
+                let btns = status === 'pending' ? `<div class="grid grid-cols-3 gap-2 mt-3"><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">10M</button><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">20M</button><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">30M</button></div>` : (status === 'processing' ? `<button onclick="updateStatus('${order.id}', 'ready-to-deliver')" class="w-full mt-3 bg-orange-500 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">PRÊT ✅</button>` : `<button onclick="updateStatus('${order.id}', 'delivered')" class="w-full mt-3 bg-green-600 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">TERMINER</button>`);
+                
+                card.innerHTML = `<div class="flex justify-between items-center mb-2 border-b pb-2"><span class="order-time">${timeStr}</span><span class="text-lg font-black text-red-600">${parseFloat(order.total || 0).toFixed(2)}€</span></div><div class="mb-3">${formatPizzas(order.delivery_notes)}</div><div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-[11px]"><div class="flex justify-between items-center mb-2"><span class="font-black text-slate-900 uppercase truncate mr-1">👤 ${order.clients?.name || 'Client'}</span>${typeHTML}</div><div class="text-slate-500 font-bold mb-1 italic">📞 ${order.clients?.phone_number || 'N/A'}</div><div class="border-t pt-1 mt-1"><span class="block text-slate-700 leading-tight">📍 <b>${order.delivery_street || 'Boutique'}</b></span><span class="city-badge">${order.delivery_city || ''}</span></div></div>${btns}`;
                 (zones[status] || zones['pending']).appendChild(card);
             });
-
+            
             document.getElementById('count-pending').innerText = counts['pending'];
             document.getElementById('count-processing').innerText = counts['processing'];
             document.getElementById('count-ready').innerText = counts['ready-to-deliver'];
