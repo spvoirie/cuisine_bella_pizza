@@ -97,7 +97,6 @@
             btn.disabled = true;
             
             try {
-                // On vérifie le PIN dans la table config_securite sur Supabase
                 const { data, error } = await _supabase
                     .from('config_securite')
                     .select('valeur_cle')
@@ -105,7 +104,6 @@
                     .single();
 
                 if (data && data.valeur_cle === pinSaisi) {
-                    // CORRECTIF SON IPAD
                     audioAlert.muted = true;
                     await audioAlert.play();
                     audioAlert.pause();
@@ -183,7 +181,25 @@
                 
                 let btns = status === 'pending' ? `<div class="grid grid-cols-3 gap-2 mt-3"><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">10M</button><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">20M</button><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">30M</button></div>` : (status === 'processing' ? `<button onclick="updateStatus('${order.id}', 'ready-to-deliver')" class="w-full mt-3 bg-orange-500 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">PRÊT ✅</button>` : `<button onclick="updateStatus('${order.id}', 'delivered')" class="w-full mt-3 bg-green-600 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">TERMINER</button>`);
                 
-                card.innerHTML = `<div class="flex justify-between items-center mb-2 border-b pb-2"><span class="order-time">${timeStr}</span><span class="text-lg font-black text-red-600">${parseFloat(order.total || 0).toFixed(2)}€</span></div><div class="mb-3">${formatPizzas(order.delivery_notes)}</div><div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-[11px]"><div class="flex justify-between items-center mb-2"><span class="font-black text-slate-900 uppercase truncate mr-1">👤 ${order.clients?.name || 'Client'}</span>${typeHTML}</div><div class="text-slate-500 font-bold mb-1 italic">📞 ${order.clients?.phone_number || 'N/A'}</div><div class="border-t pt-1 mt-1"><span class="block text-slate-700 leading-tight">📍 <b>${order.delivery_street || 'Boutique'}</b></span><span class="city-badge">${order.delivery_city || ''}</span></div></div>${btns}`;
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-2 border-b pb-2">
+                        <span class="order-time">${timeStr}</span>
+                        <span class="text-lg font-black text-red-600">${parseFloat(order.total || 0).toFixed(2)}€</span>
+                    </div>
+                    <div class="mb-3">${formatPizzas(order.delivery_notes)}</div>
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-[11px]">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-black text-slate-900 uppercase truncate mr-1">👤 ${order.clients?.name || 'Client'}</span>
+                            ${typeHTML}
+                        </div>
+                        <div class="text-slate-500 font-bold mb-1 italic">📞 ${order.clients?.phone_number || 'N/A'}</div>
+                        <div class="border-t pt-1 mt-1">
+                            <span class="block text-slate-700 leading-tight">📍 <b>${order.delivery_house_number || ''} ${order.delivery_street || 'Boutique'}</b></span>
+                            <span class="city-badge">${order.delivery_city || ''}</span>
+                        </div>
+                    </div>
+                    ${btns}
+                `;
                 (zones[status] || zones['pending']).appendChild(card);
             });
             
