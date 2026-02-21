@@ -17,7 +17,6 @@
         .pizza-item { background: #f1f5f9; border-radius: 8px; padding: 6px 10px; margin-bottom: 4px; border-left: 3px solid #3b82f6; }
         .pizza-name { font-weight: 800; text-transform: uppercase; color: #0f172a; font-size: 0.95rem; }
         .pizza-size { color: #3b82f6; font-weight: 800; font-size: 0.7rem; float: right; background: white; padding: 1px 6px; border-radius: 4px; border: 1px solid #e2e8f0; }
-        .city-badge { background: #fee2e2; color: #dc2626; padding: 2px 8px; border-radius: 6px; font-weight: 900; text-transform: uppercase; font-size: 0.8rem; display: inline-block; margin-top: 4px; }
         .btn-time { background: #3b82f6; color: white; padding: 8px 0; border-radius: 10px; font-weight: 900; font-size: 0.75rem; transition: all 0.2s; }
         .btn-time:hover { background: #2563eb; transform: translateY(-2px); }
         .order-time { background: #1e293b; color: white; padding: 4px 10px; border-radius: 8px; font-weight: 900; font-size: 14px; }
@@ -181,6 +180,9 @@
                 
                 let btns = status === 'pending' ? `<div class="grid grid-cols-3 gap-2 mt-3"><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">10M</button><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">20M</button><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">30M</button></div>` : (status === 'processing' ? `<button onclick="updateStatus('${order.id}', 'ready-to-deliver')" class="w-full mt-3 bg-orange-500 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">PRÊT ✅</button>` : `<button onclick="updateStatus('${order.id}', 'delivered')" class="w-full mt-3 bg-green-600 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">TERMINER</button>`);
                 
+                // Calcul de l'adresse propre : Numéro + Rue + Ville
+                const fullAddress = `${order.delivery_house_number || ''} ${order.delivery_street || 'Boutique'} ${order.delivery_city ? '- ' + order.delivery_city : ''}`.trim();
+
                 card.innerHTML = `
                     <div class="flex justify-between items-center mb-2 border-b pb-2">
                         <span class="order-time">${timeStr}</span>
@@ -194,8 +196,7 @@
                         </div>
                         <div class="text-slate-500 font-bold mb-1 italic">📞 ${order.clients?.phone_number || 'N/A'}</div>
                         <div class="border-t pt-1 mt-1">
-                            <span class="block text-slate-700 leading-tight">📍 <b>${order.delivery_house_number || ''} ${order.delivery_street || 'Boutique'}</b></span>
-                            <span class="city-badge">${order.delivery_city || ''}</span>
+                            <span class="block text-slate-700 leading-tight font-bold">📍 ${fullAddress}</span>
                         </div>
                     </div>
                     ${btns}
