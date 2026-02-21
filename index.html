@@ -170,7 +170,7 @@
                 if(counts.hasOwnProperty(status)) counts[status]++;
 
                 const type = (order.order_type || "").toLowerCase();
-                let typeHTML = type.includes("livraison") ? `<span class="type-badge type-livraison">🛵 LIVRAISON</span>` : (type.includes("emporter") ? `<span class="type-badge type-emporter">🛍️ EMPORTER</span>` : `<span class="type-badge type-place">🍽️ SUR PLACE</span>`);
+                let typeHTML = type.includes("livraison") ? `<span class="type-badge type-livraison">LIVRAISON</span>` : (type.includes("emporter") ? `<span class="type-badge type-emporter">EMPORTER</span>` : `<span class="type-badge type-place">SUR PLACE</span>`);
                 
                 const dateObj = new Date(order.created_at);
                 const timeStr = dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
@@ -180,7 +180,7 @@
                 
                 let btns = status === 'pending' ? `<div class="grid grid-cols-3 gap-2 mt-3"><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">10M</button><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">20M</button><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">30M</button></div>` : (status === 'processing' ? `<button onclick="updateStatus('${order.id}', 'ready-to-deliver')" class="w-full mt-3 bg-orange-500 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">PRÊT ✅</button>` : `<button onclick="updateStatus('${order.id}', 'delivered')" class="w-full mt-3 bg-green-600 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">TERMINER</button>`);
                 
-                // On formate l'adresse ici de manière sobre : Numéro Rue - Ville
+                // L'adresse sobre : Numéro Rue - Ville
                 const adresseComplete = `${order.delivery_street_number || ''} ${order.delivery_street || 'Boutique'} ${order.delivery_city ? '- ' + order.delivery_city : ''}`.trim();
 
                 card.innerHTML = `
