@@ -28,6 +28,14 @@
         .type-place { color: #16a34a; border-color: #bbf7d0; background: #f0fdf4; }
         .dot-pulse { animation: pulseCustom 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         @keyframes pulseCustom { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        
+        /* --- NOUVELLE ANIMATION FLASH ROUGE --- */
+        @keyframes flashRed {
+            0%, 100% { background-color: #0f172a; }
+            50% { background-color: #dc2626; }
+        }
+        .alert-flash { animation: flashRed 0.8s ease-in-out 5; } /* Flash 5 fois */
+        
         .column-title { font-size: 1.8rem; font-weight: 900; }
     </style>
 </head>
@@ -43,13 +51,13 @@
     </div>
 
     <div id="main-app" class="hidden min-h-screen flex flex-col">
-        <header class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900 sticky top-0 z-50">
+        <header id="header-main" class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900 sticky top-0 z-50 transition-colors duration-300">
             <div class="flex items-center gap-3">
                 <span class="text-3xl">🍕</span>
                 <h1 class="logo-font text-2xl text-white">Pizza Bella</h1>
             </div>
             <div class="flex items-center gap-2 bg-slate-800 px-4 py-1.5 rounded-full border border-slate-700">
-                <span class="w-2.5 h-2.5 bg-red-600 rounded-full dot-pulse"></span>
+                <span id="live-dot" class="w-2.5 h-2.5 bg-red-600 rounded-full dot-pulse"></span>
                 <span class="font-black text-xs tracking-widest text-white uppercase">LIVE</span>
             </div>
         </header>
@@ -85,14 +93,12 @@
         const ACCESS_PIN = "1234";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // --- GESTION ALERTE SONORE ---
         const audioAlert = new Audio('./alerte.mp3');
         let lastOrderCount = 0;
         let isFirstLoad = true;
 
         async function checkAccess() {
             if (document.getElementById('pin-input').value === ACCESS_PIN) {
-                // CORRECTIF IPAD : On force une lecture muette au clic pour débloquer Safari
                 audioAlert.muted = true;
                 try {
                     await audioAlert.play();
@@ -115,14 +121,24 @@
         async function loadData() {
             const { data, error } = await _supabase.from('orders').select('*, clients(*)').neq('status', 'delivered').order('created_at', { ascending: false });
             if (!error) {
-                // Déclenche le son si le nombre de commandes augmente
                 if (!isFirstLoad && data.length > lastOrderCount) {
+                    triggerVisualAlert(); // Déclenche le flash visuel
                     audioAlert.play().catch(e => console.error("Erreur lecture iPad:", e));
                 }
                 lastOrderCount = data.length;
                 isFirstLoad = false;
                 renderUI(data);
             }
+        }
+
+        // --- FONCTION ALERTE VISUELLE ---
+        function triggerVisualAlert() {
+            const header = document.getElementById('header-main');
+            header.classList.add('alert-flash');
+            // On retire la classe après l'animation (4 secondes) pour pouvoir la relancer plus tard
+            setTimeout(() => {
+                header.classList.remove('alert-flash');
+            }, 4000);
         }
 
         function formatPizzas(notes) {
