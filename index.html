@@ -85,18 +85,21 @@
         const ACCESS_PIN = "1234";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // --- AJOUT ALERT SONORE ---
+        // --- GESTION ALERTE SONORE ---
         const audioAlert = new Audio('./alerte.mp3');
         let lastOrderCount = 0;
         let isFirstLoad = true;
 
-        function checkAccess() {
+        async function checkAccess() {
             if (document.getElementById('pin-input').value === ACCESS_PIN) {
-                // Débloque l'audio sur navigateur suite au clic utilisateur
-                audioAlert.play().then(() => {
+                // CORRECTIF IPAD : On force une lecture muette au clic pour débloquer Safari
+                audioAlert.muted = true;
+                try {
+                    await audioAlert.play();
                     audioAlert.pause();
+                    audioAlert.muted = false;
                     audioAlert.currentTime = 0;
-                }).catch(e => console.log("Audio en attente"));
+                } catch (e) { console.log("Init audio iPad"); }
 
                 document.getElementById('lock-screen').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
@@ -112,9 +115,9 @@
         async function loadData() {
             const { data, error } = await _supabase.from('orders').select('*, clients(*)').neq('status', 'delivered').order('created_at', { ascending: false });
             if (!error) {
-                // Détection d'une nouvelle commande (si le nombre total augmente)
+                // Déclenche le son si le nombre de commandes augmente
                 if (!isFirstLoad && data.length > lastOrderCount) {
-                    audioAlert.play().catch(e => console.error("Erreur audio:", e));
+                    audioAlert.play().catch(e => console.error("Erreur lecture iPad:", e));
                 }
                 lastOrderCount = data.length;
                 isFirstLoad = false;
