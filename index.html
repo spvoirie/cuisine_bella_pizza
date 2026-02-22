@@ -11,7 +11,9 @@
         body { background-color: #0f172a; color: white; font-family: 'Inter', sans-serif; }
         .logo-font { font-family: 'Lobster', cursive; }
         .column-container { background: rgba(30, 41, 59, 0.3); min-height: 80vh; border-radius: 20px; padding: 12px; border: 1px solid rgba(255,255,255,0.05); }
-        .order-card { background: white; color: #1e293b; border-radius: 16px; padding: 15px; margin-bottom: 15px; border-left: 8px solid #3b82f6; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+        .order-card { background: white; color: #1e293b; border-radius: 166px; padding: 15px; margin-bottom: 15px; border-left: 8px solid #3b82f6; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+        /* Correction border-radius suite à faute de frappe visuelle au-dessus, on garde 16px */
+        .order-card { border-radius: 16px; } 
         .status-processing { border-left-color: #f97316; }
         .status-ready { border-left-color: #22c55e; }
         .pizza-item { background: #f1f5f9; border-radius: 8px; padding: 6px 10px; margin-bottom: 4px; border-left: 3px solid #3b82f6; }
@@ -88,6 +90,13 @@
         const audioAlert = new Audio('./alerte.mp3');
         let lastOrderCount = 0;
         let isFirstLoad = true;
+
+        // Ecouteur pour la touche Entrée sur le PIN
+        document.getElementById('pin-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                checkAccess();
+            }
+        });
 
         async function checkAccess() {
             const btn = document.getElementById('btn-entrer');
