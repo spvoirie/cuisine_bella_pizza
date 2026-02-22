@@ -11,9 +11,7 @@
         body { background-color: #0f172a; color: white; font-family: 'Inter', sans-serif; }
         .logo-font { font-family: 'Lobster', cursive; }
         .column-container { background: rgba(30, 41, 59, 0.3); min-height: 80vh; border-radius: 20px; padding: 12px; border: 1px solid rgba(255,255,255,0.05); }
-        .order-card { background: white; color: #1e293b; border-radius: 166px; padding: 15px; margin-bottom: 15px; border-left: 8px solid #3b82f6; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
-        /* Correction border-radius suite à faute de frappe visuelle au-dessus, on garde 16px */
-        .order-card { border-radius: 16px; } 
+        .order-card { background: white; color: #1e293b; border-radius: 16px; padding: 15px; margin-bottom: 15px; border-left: 8px solid #3b82f6; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
         .status-processing { border-left-color: #f97316; }
         .status-ready { border-left-color: #22c55e; }
         .pizza-item { background: #f1f5f9; border-radius: 8px; padding: 6px 10px; margin-bottom: 4px; border-left: 3px solid #3b82f6; }
@@ -40,7 +38,7 @@
         <div class="bg-slate-900 p-8 rounded-3xl border border-slate-800 shadow-2xl w-full max-w-[320px] text-center">
             <span class="text-5xl mb-2 block">🍕</span>
             <h1 class="logo-font text-4xl text-white mb-6">Pizza <span class="text-red-500">Bella</span></h1>
-            <input type="password" id="pin-input" inputmode="numeric" placeholder="PIN" class="bg-slate-800 border-2 border-slate-700 rounded-xl p-3 text-center text-2xl w-full mb-4 text-white tracking-[0.3em] outline-none focus:border-red-500">
+            <input type="password" id="pin-input" inputmode="numeric" placeholder="PIN" autofocus class="bg-slate-800 border-2 border-slate-700 rounded-xl p-3 text-center text-2xl w-full mb-4 text-white tracking-[0.3em] outline-none focus:border-red-500">
             <button id="btn-entrer" onclick="checkAccess()" class="w-full bg-red-600 text-white font-black py-3 rounded-xl uppercase tracking-widest shadow-lg active:scale-95 transition-all">Entrer</button>
         </div>
     </div>
@@ -91,16 +89,21 @@
         let lastOrderCount = 0;
         let isFirstLoad = true;
 
-        // Ecouteur pour la touche Entrée sur le PIN
-        document.getElementById('pin-input').addEventListener('keypress', function (e) {
+        // Écouteur de touche Entrée amélioré (keydown au lieu de keypress)
+        document.getElementById('pin-input').addEventListener('keydown', function (e) {
             if (e.key === 'Enter') {
+                e.preventDefault(); // Empêche des comportements inattendus
                 checkAccess();
             }
         });
 
         async function checkAccess() {
             const btn = document.getElementById('btn-entrer');
-            const pinSaisi = document.getElementById('pin-input').value;
+            const pinInput = document.getElementById('pin-input');
+            const pinSaisi = pinInput.value;
+            
+            if (!pinSaisi) return;
+
             btn.innerText = "VÉRIFICATION...";
             btn.disabled = true;
             
@@ -125,6 +128,8 @@
                     alert("Code PIN incorrect");
                     btn.innerText = "ENTRER";
                     btn.disabled = false;
+                    pinInput.value = ""; // On vide pour recommencer
+                    pinInput.focus();
                 }
             } catch (err) {
                 alert("Erreur de connexion");
