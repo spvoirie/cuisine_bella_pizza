@@ -21,7 +21,7 @@
         .btn-time:hover { background: #2563eb; transform: translateY(-2px); }
         .order-time { background: #1e293b; color: white; padding: 4px 10px; border-radius: 8px; font-weight: 900; font-size: 14px; }
         .step-badge { background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; font-size: 1.2rem; margin-left: auto; }
-        .type-badge { font-weight: 900; font-size: 10px; padding: 4px 8px; border-radius: 8px; display: flex; items-center: center; gap: 4px; border: 1.5px solid; }
+        .type-badge { font-weight: 900; font-size: 10px; padding: 4px 8px; border-radius: 8px; display: flex; align-items: center; gap: 4px; border: 1.5px solid; }
         .type-livraison { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
         .type-emporter { color: #2563eb; border-color: #bfdbfe; background: #eff6ff; }
         .type-place { color: #16a34a; border-color: #bbf7d0; background: #f0fdf4; }
@@ -89,10 +89,9 @@
         let lastOrderCount = 0;
         let isFirstLoad = true;
 
-        // Écouteur de touche Entrée amélioré (keydown au lieu de keypress)
         document.getElementById('pin-input').addEventListener('keydown', function (e) {
             if (e.key === 'Enter') {
-                e.preventDefault(); // Empêche des comportements inattendus
+                e.preventDefault();
                 checkAccess();
             }
         });
@@ -101,26 +100,16 @@
             const btn = document.getElementById('btn-entrer');
             const pinInput = document.getElementById('pin-input');
             const pinSaisi = pinInput.value;
-            
             if (!pinSaisi) return;
-
             btn.innerText = "VÉRIFICATION...";
             btn.disabled = true;
-            
             try {
-                const { data, error } = await _supabase
-                    .from('config_securite')
-                    .select('valeur_cle')
-                    .eq('nom_cle', 'pin_cuisine')
-                    .single();
-
+                const { data, error } = await _supabase.from('config_securite').select('valeur_cle').eq('nom_cle', 'pin_cuisine').single();
                 if (data && data.valeur_cle === pinSaisi) {
                     audioAlert.muted = true;
                     await audioAlert.play();
                     audioAlert.pause();
                     audioAlert.muted = false;
-                    audioAlert.currentTime = 0;
-
                     document.getElementById('lock-screen').classList.add('hidden');
                     document.getElementById('main-app').classList.remove('hidden');
                     startSystem();
@@ -128,7 +117,7 @@
                     alert("Code PIN incorrect");
                     btn.innerText = "ENTRER";
                     btn.disabled = false;
-                    pinInput.value = ""; // On vide pour recommencer
+                    pinInput.value = "";
                     pinInput.focus();
                 }
             } catch (err) {
@@ -164,7 +153,12 @@
 
         function formatPizzas(notes) {
             let items = [];
-            try { items = typeof notes === 'string' ? JSON.parse(notes) : notes; } catch (e) { return `<div class="pizza-item"><span class="pizza-name">${notes}</span></div>`; }
+            if (!notes) return '<div class="pizza-item">Vide</div>';
+            try { 
+                items = typeof notes === 'string' ? JSON.parse(notes) : notes; 
+            } catch (e) { 
+                return `<div class="pizza-item"><span class="pizza-name">${notes}</span></div>`; 
+            }
             if (!Array.isArray(items)) return `<div class="pizza-item"><span class="pizza-name">${notes}</span></div>`;
             return items.map(p => `
                 <div class="pizza-item">
@@ -194,14 +188,19 @@
                 
                 let btns = status === 'pending' ? `<div class="grid grid-cols-3 gap-2 mt-3"><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">10M</button><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">20M</button><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">30M</button></div>` : (status === 'processing' ? `<button onclick="updateStatus('${order.id}', 'ready-to-deliver')" class="w-full mt-3 bg-orange-500 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">PRÊT ✅</button>` : `<button onclick="updateStatus('${order.id}', 'delivered')" class="w-full mt-3 bg-green-600 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">TERMINER</button>`);
                 
-                const adresseComplete = `${order.delivery_street_number || ''} ${order.delivery_street || 'Boutique'} ${order.delivery_city ? '- ' + order.delivery_city : ''} ${order.delivery_postal_code || ''}`.trim();
+                // --- ZONE CORRIGÉE POUR L'ADRESSE ---
+                const numStr = order.delivery_street_number ? String(order.delivery_street_number) + ' ' : '';
+                const rueStr = order.delivery_street || '';
+                const villeStr = order.delivery_city ? ' - ' + order.delivery_city : '';
+                const adresseComplete = (numStr + rueStr + villeStr).trim() || "Boutique";
+                // ------------------------------------
 
                 card.innerHTML = `
                     <div class="flex justify-between items-center mb-2 border-b pb-2">
                         <span class="order-time">${timeStr}</span>
-                        <span class="text-lg font-black text-red-600">${parseFloat(order.total || 0).toFixed(2)}€</span>
+                        <span class="text-lg font-black text-red-600">${parseFloat(order.total_price || 0).toFixed(2)}€</span>
                     </div>
-                    <div class="mb-3">${formatPizzas(order.delivery_notes)}</div>
+                    <div class="mb-3">${formatPizzas(order.items_json || order.delivery_notes)}</div>
                     <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-[11px]">
                         <div class="flex justify-between items-center mb-2">
                             <span class="font-black text-slate-900 uppercase truncate mr-1">👤 ${order.clients?.name || 'Client'}</span>
