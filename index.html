@@ -11,7 +11,7 @@
         body { background-color: #0f172a; color: white; font-family: 'Inter', sans-serif; }
         .logo-font { font-family: 'Lobster', cursive; }
         .column-container { background: rgba(30, 41, 59, 0.3); min-height: 80vh; border-radius: 20px; padding: 12px; border: 1px solid rgba(255,255,255,0.05); }
-        .order-card { background: white; color: #1e293b; border-radius: 16px; padding: 15px; margin-bottom: 15px; border-left: 8px solid #3b82f6; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); }
+        .order-card { background: white; color: #1e293b; border-radius: 16px; padding: 15px; margin-bottom: 15px; border-left: 8px solid #3b82f6; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
         .status-processing { border-left-color: #f97316; }
         .status-ready { border-left-color: #22c55e; }
         .pizza-item { background: #f1f5f9; border-radius: 8px; padding: 6px 10px; margin-bottom: 4px; border-left: 3px solid #3b82f6; }
@@ -153,7 +153,7 @@
 
         function formatPizzas(notes) {
             let items = [];
-            if (!notes) return '<div class="pizza-item">Vide</div>';
+            if (!notes) return '<div class="pizza-item">Aucun article</div>';
             try { 
                 items = typeof notes === 'string' ? JSON.parse(notes) : notes; 
             } catch (e) { 
@@ -188,17 +188,24 @@
                 
                 let btns = status === 'pending' ? `<div class="grid grid-cols-3 gap-2 mt-3"><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">10M</button><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">20M</button><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">30M</button></div>` : (status === 'processing' ? `<button onclick="updateStatus('${order.id}', 'ready-to-deliver')" class="w-full mt-3 bg-orange-500 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">PRÊT ✅</button>` : `<button onclick="updateStatus('${order.id}', 'delivered')" class="w-full mt-3 bg-green-600 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">TERMINER</button>`);
                 
-                // --- ZONE CORRIGÉE POUR L'ADRESSE ---
-                const numStr = order.delivery_street_number ? String(order.delivery_street_number) + ' ' : '';
-                const rueStr = order.delivery_street || '';
-                const villeStr = order.delivery_city ? ' - ' + order.delivery_city : '';
-                const adresseComplete = (numStr + rueStr + villeStr).trim() || "Boutique";
-                // ------------------------------------
+                // --- LOGIQUE ADRESSE ULTRA-ROBUSTE ---
+                const num = order.delivery_street_number ? String(order.delivery_street_number).trim() : '';
+                const rue = order.delivery_street ? order.delivery_street.trim() : '';
+                const ville = order.delivery_city ? order.delivery_city.trim() : '';
+                
+                let adresseAffichee = "";
+                if (num || rue) {
+                    adresseAffichee = `${num} ${rue}`.trim();
+                    if (ville) adresseAffichee += ` - ${ville}`;
+                } else {
+                    adresseAffichee = "Boutique / Emporter";
+                }
+                // -------------------------------------
 
                 card.innerHTML = `
                     <div class="flex justify-between items-center mb-2 border-b pb-2">
                         <span class="order-time">${timeStr}</span>
-                        <span class="text-lg font-black text-red-600">${parseFloat(order.total_price || 0).toFixed(2)}€</span>
+                        <span class="text-lg font-black text-red-600">${parseFloat(order.total_price || order.total || 0).toFixed(2)}€</span>
                     </div>
                     <div class="mb-3">${formatPizzas(order.items_json || order.delivery_notes)}</div>
                     <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-[11px]">
@@ -208,7 +215,7 @@
                         </div>
                         <div class="text-slate-500 font-bold mb-1 italic">📞 ${order.clients?.phone_number || 'N/A'}</div>
                         <div class="border-t pt-1 mt-1">
-                            <span class="block text-slate-700 leading-tight font-bold">📍 ${adresseComplete}</span>
+                            <span class="block text-slate-700 leading-tight font-bold">📍 ${adresseAffichee}</span>
                         </div>
                     </div>
                     ${btns}
