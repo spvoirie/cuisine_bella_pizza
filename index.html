@@ -17,6 +17,7 @@
         .pizza-item { background: #f1f5f9; border-radius: 8px; padding: 6px 10px; margin-bottom: 4px; border-left: 3px solid #3b82f6; }
         .pizza-name { font-weight: 800; text-transform: uppercase; color: #0f172a; font-size: 0.95rem; }
         .pizza-size { color: #3b82f6; font-weight: 800; font-size: 0.7rem; float: right; background: white; padding: 1px 6px; border-radius: 4px; border: 1px solid #e2e8f0; }
+        .special-note { color: #dc2626; font-weight: 900; font-size: 0.75rem; display: block; margin-top: 2px; text-transform: uppercase; border-top: 1px dashed #fecaca; padding-top: 2px; }
         .btn-time { background: #3b82f6; color: white; padding: 8px 0; border-radius: 10px; font-weight: 900; font-size: 0.75rem; transition: all 0.2s; }
         .btn-time:hover { background: #2563eb; transform: translateY(-2px); }
         .order-time { background: #1e293b; color: white; padding: 4px 10px; border-radius: 8px; font-weight: 900; font-size: 14px; }
@@ -160,12 +161,29 @@
                 return `<div class="pizza-item"><span class="pizza-name">${notes}</span></div>`; 
             }
             if (!Array.isArray(items)) return `<div class="pizza-item"><span class="pizza-name">${notes}</span></div>`;
-            return items.map(p => `
-                <div class="pizza-item">
-                    <span class="pizza-size">${p.size || 'G'}</span>
-                    <span class="pizza-name">${p.name}</span>
-                </div>
-            `).join('');
+            
+            return items.map(p => {
+                // Détecter si le nom contient des instructions spéciales (ex: "sans", "avec", "supp")
+                const hasInstruction = p.name.toLowerCase().includes("sans") || p.name.toLowerCase().includes("avec");
+                let pizzaMainName = p.name;
+                let instructionHTML = "";
+
+                if (hasInstruction) {
+                    // On essaie de séparer le nom de la pizza de l'instruction pour la lisibilité
+                    // Si Bello écrit "Reine sans olives", on met "sans olives" en évidence
+                    const parts = p.name.split(/(?=sans|avec)/i);
+                    pizzaMainName = parts[0];
+                    instructionHTML = parts[1] ? `<span class="special-note">⚠️ ${parts[1]}</span>` : "";
+                }
+
+                return `
+                    <div class="pizza-item">
+                        <span class="pizza-size">${p.size || 'G'}</span>
+                        <span class="pizza-name">${pizzaMainName}</span>
+                        ${instructionHTML}
+                    </div>
+                `;
+            }).join('');
         }
 
         function renderUI(orders) {
@@ -188,7 +206,6 @@
                 
                 let btns = status === 'pending' ? `<div class="grid grid-cols-3 gap-2 mt-3"><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">10M</button><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">20M</button><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">30M</button></div>` : (status === 'processing' ? `<button onclick="updateStatus('${order.id}', 'ready-to-deliver')" class="w-full mt-3 bg-orange-500 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">PRÊT ✅</button>` : `<button onclick="updateStatus('${order.id}', 'delivered')" class="w-full mt-3 bg-green-600 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">TERMINER</button>`);
                 
-                // --- LOGIQUE ADRESSE ULTRA-ROBUSTE ---
                 const num = order.delivery_street_number ? String(order.delivery_street_number).trim() : '';
                 const rue = order.delivery_street ? order.delivery_street.trim() : '';
                 const ville = order.delivery_city ? order.delivery_city.trim() : '';
@@ -200,7 +217,6 @@
                 } else {
                     adresseAffichee = "Boutique / Emporter";
                 }
-                // -------------------------------------
 
                 card.innerHTML = `
                     <div class="flex justify-between items-center mb-2 border-b pb-2">
