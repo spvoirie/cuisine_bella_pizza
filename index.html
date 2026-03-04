@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cuisine - Pizza Bello</title>
+    <title>Cuisine Live - Pizza Bella</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Lobster&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
@@ -51,8 +51,8 @@
                 <h1 class="logo-font text-2xl text-white">Pizza Bella</h1>
             </div>
             <div class="flex items-center gap-2 bg-slate-800 px-4 py-1.5 rounded-full border border-slate-700">
-                <span class="w-2.5 h-2.5 bg-red-600 rounded-full dot-pulse"></span>
-                <span class="font-black text-xs tracking-widest text-white uppercase">LIVE</span>
+                <span class="w-2.5 h-2.5 bg-green-500 rounded-full dot-pulse"></span>
+                <span class="font-black text-xs tracking-widest text-white uppercase">REALTIME ACTIVE</span>
             </div>
         </header>
 
@@ -87,8 +87,7 @@
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const audioAlert = new Audio('./alerte.mp3');
-        let lastOrderCount = 0;
-        let isFirstLoad = true;
+        let ordersSubscription = null;
 
         document.getElementById('pin-input').addEventListener('keydown', function (e) {
             if (e.key === 'Enter') {
@@ -128,20 +127,42 @@
             }
         }
 
-        function startSystem() { 
-            loadData();
-            setInterval(loadData, 8000); 
+        async function startSystem() { 
+            // 1. Chargement initial
+            await loadData(); 
+
+            // 2. Écoute Realtime (Remplace le setInterval)
+            if (ordersSubscription) _supabase.removeChannel(ordersSubscription);
+
+            ordersSubscription = _supabase
+                .channel('orders-realtime')
+                .on(
+                    'postgres_changes', 
+                    { event: '*', schema: 'public', table: 'orders' }, 
+                    (payload) => {
+                        console.log('Update Realtime reçu:', payload);
+                        
+                        // Si nouvelle commande : Alerte
+                        if (payload.eventType === 'INSERT') {
+                            triggerVisualAlert();
+                            audioAlert.play().catch(e => console.error("Erreur audio:", e));
+                        }
+                        
+                        // Rafraîchissement global pour maintenir l'ordre et les jointures clients
+                        loadData(); 
+                    }
+                )
+                .subscribe();
         }
 
         async function loadData() {
-            const { data, error } = await _supabase.from('orders').select('*, clients(*)').neq('status', 'delivered').order('created_at', { ascending: false });
+            const { data, error } = await _supabase
+                .from('orders')
+                .select('*, clients(*)')
+                .neq('status', 'delivered')
+                .order('created_at', { ascending: false });
+
             if (!error) {
-                if (!isFirstLoad && data.length > lastOrderCount) {
-                    triggerVisualAlert();
-                    audioAlert.play().catch(e => console.error("Erreur audio:", e));
-                }
-                lastOrderCount = data.length;
-                isFirstLoad = false;
                 renderUI(data);
             }
         }
@@ -163,14 +184,11 @@
             if (!Array.isArray(items)) return `<div class="pizza-item"><span class="pizza-name">${notes}</span></div>`;
             
             return items.map(p => {
-                // Détecter si le nom contient des instructions spéciales (ex: "sans", "avec", "supp")
                 const hasInstruction = p.name.toLowerCase().includes("sans") || p.name.toLowerCase().includes("avec");
                 let pizzaMainName = p.name;
                 let instructionHTML = "";
 
                 if (hasInstruction) {
-                    // On essaie de séparer le nom de la pizza de l'instruction pour la lisibilité
-                    // Si Bello écrit "Reine sans olives", on met "sans olives" en évidence
                     const parts = p.name.split(/(?=sans|avec)/i);
                     pizzaMainName = parts[0];
                     instructionHTML = parts[1] ? `<span class="special-note">⚠️ ${parts[1]}</span>` : "";
@@ -210,13 +228,7 @@
                 const rue = order.delivery_street ? order.delivery_street.trim() : '';
                 const ville = order.delivery_city ? order.delivery_city.trim() : '';
                 
-                let adresseAffichee = "";
-                if (num || rue) {
-                    adresseAffichee = `${num} ${rue}`.trim();
-                    if (ville) adresseAffichee += ` - ${ville}`;
-                } else {
-                    adresseAffichee = "Boutique / Emporter";
-                }
+                let adresseAffichee = (num || rue) ? `${num} ${rue}`.trim() + (ville ? ` - ${ville}` : "") : "Boutique / Emporter";
 
                 card.innerHTML = `
                     <div class="flex justify-between items-center mb-2 border-b pb-2">
@@ -236,7 +248,7 @@
                     </div>
                     ${btns}
                 `;
-                (zones[status] || zones['pending']).appendChild(card);
+                if (zones[status]) zones[status].appendChild(card);
             });
             
             document.getElementById('count-pending').innerText = counts['pending'];
@@ -246,7 +258,8 @@
 
         async function updateStatus(orderId, newStatus) {
             const { error } = await _supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
-            if (!error) loadData();
+            if (error) console.error("Erreur update status:", error);
+            // Pas besoin de loadData() ici, le Realtime s'en chargera via l'événement UPDATE
         }
     </script>
 </body>
