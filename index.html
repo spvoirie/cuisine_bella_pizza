@@ -128,10 +128,8 @@
         }
 
         async function startSystem() { 
-            // 1. Chargement initial
             await loadData(); 
 
-            // 2. Écoute Realtime (Remplace le setInterval)
             if (ordersSubscription) _supabase.removeChannel(ordersSubscription);
 
             ordersSubscription = _supabase
@@ -140,15 +138,10 @@
                     'postgres_changes', 
                     { event: '*', schema: 'public', table: 'orders' }, 
                     (payload) => {
-                        console.log('Update Realtime reçu:', payload);
-                        
-                        // Si nouvelle commande : Alerte
                         if (payload.eventType === 'INSERT') {
                             triggerVisualAlert();
                             audioAlert.play().catch(e => console.error("Erreur audio:", e));
                         }
-                        
-                        // Rafraîchissement global pour maintenir l'ordre et les jointures clients
                         loadData(); 
                     }
                 )
@@ -184,20 +177,14 @@
             if (!Array.isArray(items)) return `<div class="pizza-item"><span class="pizza-name">${notes}</span></div>`;
             
             return items.map(p => {
-                const hasInstruction = p.name.toLowerCase().includes("sans") || p.name.toLowerCase().includes("avec");
-                let pizzaMainName = p.name;
-                let instructionHTML = "";
-
-                if (hasInstruction) {
-                    const parts = p.name.split(/(?=sans|avec)/i);
-                    pizzaMainName = parts[0];
-                    instructionHTML = parts[1] ? `<span class="special-note">⚠️ ${parts[1]}</span>` : "";
-                }
+                // Utilisation du champ "modifications" renvoyé par ElevenLabs
+                const modifText = (p.modifications && p.modifications.trim() !== "") ? p.modifications : null;
+                const instructionHTML = modifText ? `<span class="special-note">⚠️ ${modifText}</span>` : "";
 
                 return `
                     <div class="pizza-item">
                         <span class="pizza-size">${p.size || 'G'}</span>
-                        <span class="pizza-name">${pizzaMainName}</span>
+                        <span class="pizza-name">${p.name}</span>
                         ${instructionHTML}
                     </div>
                 `;
@@ -259,7 +246,6 @@
         async function updateStatus(orderId, newStatus) {
             const { error } = await _supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
             if (error) console.error("Erreur update status:", error);
-            // Pas besoin de loadData() ici, le Realtime s'en chargera via l'événement UPDATE
         }
     </script>
 </body>
