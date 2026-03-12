@@ -31,39 +31,44 @@
         .alert-flash { animation: flashRed 0.8s ease-in-out 5; }
         .column-title { font-size: 1.8rem; font-weight: 900; }
         
-        /* Style spécifique pour les inputs de connexion */
-        .auth-input { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 12px; width: 100%; color: white; outline: none; transition: border 0.2s; }
-        .auth-input:focus { border-color: #00d2ff; }
+        /* Nouveau style pour les inputs harmonisés */
+        .auth-input { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 14px; width: 100%; color: #1e293b; font-weight: 600; font-size: 16px; outline: none; transition: all 0.2s; }
+        .auth-input:focus { border-color: #00d2ff; background: white; }
     </style>
 </head>
 <body>
 
     <div id="lock-screen" class="fixed inset-0 bg-[#0f172a] z-[100] flex items-center justify-center p-4">
-        <div class="bg-slate-900 p-8 rounded-3xl border border-slate-800 shadow-2xl w-full max-w-[350px] text-center">
-            <img src="SAIOS logo V1.jpg" alt="SAIOS" class="w-40 mx-auto mb-8">
+        <div class="bg-white p-8 rounded-[32px] shadow-2xl w-full max-w-[380px] text-center">
+            
+            <img src="SAIOS logo V1.jpg" alt="SAIOS" class="w-full mx-auto mb-10">
             
             <div class="space-y-4">
-                <input type="email" id="email-input" placeholder="Email restaurant" class="auth-input">
-                <input type="password" id="pin-input" placeholder="Mot de passe" class="auth-input text-center text-xl tracking-widest">
-                <button id="btn-entrer" onclick="checkAccess()" class="w-full bg-gradient-to-r from-blue-900 to-cyan-500 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg active:scale-95 transition-all">
+                <input type="email" id="email-input" placeholder="Adresse mail" class="auth-input">
+                <input type="password" id="pin-input" placeholder="Mot de passe" class="auth-input">
+                
+                <button id="btn-entrer" onclick="checkAccess()" class="w-full bg-gradient-to-r from-[#003366] to-[#00d2ff] text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg active:scale-95 transition-all mt-2">
                     Se connecter
                 </button>
             </div>
-            <p class="text-slate-500 text-[10px] mt-6 uppercase tracking-widest">Powered by SAIOS Technologies</p>
+            
+            <p class="text-slate-400 text-[10px] mt-8 uppercase tracking-widest font-bold">Powered by SAIOS Technologies</p>
         </div>
     </div>
 
     <div id="main-app" class="hidden min-h-screen flex flex-col">
         <header id="header-main" class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900 sticky top-0 z-50">
             <div class="flex items-center gap-3">
-                <img src="SAIOS logo V1.jpg" alt="SAIOS" class="h-8">
+                <div class="bg-white p-1 rounded-lg">
+                    <img src="SAIOS logo V1.jpg" alt="SAIOS" class="h-6">
+                </div>
                 <div class="h-6 w-[1px] bg-slate-700 mx-2"></div>
                 <h1 class="font-black text-sm text-slate-400 uppercase tracking-tighter">Cuisine <span class="text-white">Live</span></h1>
             </div>
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-2 bg-slate-800 px-4 py-1.5 rounded-full border border-slate-700">
                     <span class="w-2.5 h-2.5 bg-green-500 rounded-full dot-pulse"></span>
-                    <span class="font-black text-xs tracking-widest text-white uppercase">Connecté</span>
+                    <span class="font-black text-xs tracking-widest text-white uppercase text-[10px]">Realtime Active</span>
                 </div>
                 <button onclick="location.reload()" class="text-slate-500 hover:text-white transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -106,23 +111,17 @@
         const audioAlert = new Audio('./alerte.mp3');
         let ordersSubscription = null;
 
-        // --- GESTION ACCÈS ---
-
         async function checkAccess() {
             const btn = document.getElementById('btn-entrer');
             const email = document.getElementById('email-input').value;
             const password = document.getElementById('pin-input').value;
 
-            if (!email || !password) {
-                alert("Merci de saisir vos identifiants");
-                return;
-            }
+            if (!email || !password) return;
 
-            btn.innerText = "VÉRIFICATION...";
+            btn.innerText = "CONNEXION...";
             btn.disabled = true;
 
             try {
-                // Tentative de connexion Supabase Auth
                 const { data, error } = await _supabase.auth.signInWithPassword({
                     email: email,
                     password: password,
@@ -130,7 +129,6 @@
 
                 if (error) throw error;
 
-                // Si succès
                 audioAlert.muted = true;
                 await audioAlert.play();
                 audioAlert.pause();
@@ -142,14 +140,11 @@
                 startSystem();
 
             } catch (err) {
-                alert("Identifiants incorrects ou erreur réseau");
-                console.error(err);
+                alert("Identifiants incorrects");
                 btn.innerText = "SE CONNECTER";
                 btn.disabled = false;
             }
         }
-
-        // --- LOGIQUE SYSTÈME ---
 
         async function startSystem() { 
             await loadData(); 
@@ -173,7 +168,6 @@
         }
 
         async function loadData() {
-            // Les règles RLS s'occupent de filtrer automatiquement par restaurant_id
             const { data, error } = await _supabase
                 .from('orders')
                 .select('*, clients(*)')
@@ -182,8 +176,6 @@
 
             if (!error) {
                 renderUI(data);
-            } else {
-                console.error("Erreur de chargement:", error);
             }
         }
 
@@ -276,4 +268,3 @@
     </script>
 </body>
 </html>
-
