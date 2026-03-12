@@ -17,37 +17,22 @@
         .pizza-name { font-weight: 800; text-transform: uppercase; color: #0f172a; font-size: 0.95rem; }
         .pizza-size { color: #3b82f6; font-weight: 800; font-size: 0.7rem; float: right; background: white; padding: 1px 6px; border-radius: 4px; border: 1px solid #e2e8f0; }
         .special-note { color: #dc2626; font-weight: 900; font-size: 0.75rem; display: block; margin-top: 2px; text-transform: uppercase; border-top: 1px dashed #fecaca; padding-top: 2px; }
-        
-        /* Couleur Bleu Originale */
         .btn-time { background: #3b82f6; color: white; padding: 8px 0; border-radius: 10px; font-weight: 900; font-size: 0.75rem; transition: all 0.2s; }
-        .btn-time:hover { background: #2563eb; transform: translateY(-2px); }
-        
         .order-time { background: #1e293b; color: white; padding: 4px 10px; border-radius: 8px; font-weight: 900; font-size: 14px; }
         .step-badge { background: rgba(255,255,255,0.1); padding: 4px 12px; border-radius: 20px; font-size: 1.2rem; margin-left: auto; }
         .type-badge { font-weight: 900; font-size: 10px; padding: 4px 8px; border-radius: 8px; display: flex; align-items: center; gap: 4px; border: 1.5px solid; }
         .type-livraison { color: #dc2626; border-color: #fecaca; background: #fef2f2; }
         .type-emporter { color: #2563eb; border-color: #bfdbfe; background: #eff6ff; }
         .type-place { color: #16a34a; border-color: #bbf7d0; background: #f0fdf4; }
-        .dot-pulse { animation: pulseCustom 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        @keyframes pulseCustom { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .auth-input { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 14px; width: 100%; color: #1e293b; font-weight: 600; font-size: 16px; outline: none; }
         @keyframes flashRed { 0%, 100% { background-color: #0f172a; } 50% { background-color: #dc2626; } }
         .alert-flash { animation: flashRed 0.8s ease-in-out 5; }
-        .column-title { font-size: 1.8rem; font-weight: 900; }
-        
-        .auth-input { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 14px; width: 100%; color: #1e293b; font-weight: 600; font-size: 16px; outline: none; transition: all 0.2s; }
-        .auth-input:focus { border-color: #3b82f6; background: white; }
-
-        @keyframes entrance {
-            0% { opacity: 0; transform: scale(0.95) translateY(10px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        .animate-entrance { animation: entrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     </style>
 </head>
 <body>
 
     <div id="lock-screen" class="fixed inset-0 bg-[#0f172a] z-[100] flex items-center justify-center p-4">
-        <div class="bg-white p-8 rounded-[32px] shadow-2xl w-full max-w-[380px] text-center animate-entrance">
+        <div class="bg-white p-8 rounded-[32px] shadow-2xl w-full max-w-[380px] text-center">
             <img src="SAIOS logo V1.jpg" alt="SAIOS" class="w-full mx-auto mb-10">
             <div class="space-y-4">
                 <input type="email" id="email-input" placeholder="Adresse mail" class="auth-input">
@@ -63,45 +48,29 @@
     <div id="main-app" class="hidden min-h-screen flex flex-col">
         <header id="header-main" class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900 sticky top-0 z-50">
             <div class="flex items-center gap-3">
-                <div class="bg-white p-1 rounded-lg">
-                    <img src="SAIOS logo V1.jpg" alt="SAIOS" class="h-6">
-                </div>
-                <div class="h-6 w-[1px] bg-slate-700 mx-2"></div>
+                <div class="bg-white p-1 rounded-lg"><img src="SAIOS logo V1.jpg" alt="SAIOS" class="h-6"></div>
                 <h1 class="font-black text-sm text-slate-400 uppercase tracking-tighter">Cuisine <span class="text-white">Live</span></h1>
             </div>
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-2 bg-slate-800 px-4 py-1.5 rounded-full border border-slate-700">
-                    <span class="w-2.5 h-2.5 bg-green-500 rounded-full dot-pulse"></span>
-                    <span class="font-black text-xs tracking-widest text-white uppercase text-[10px]">Realtime Active</span>
+                    <span class="w-2.5 h-2.5 bg-green-500 rounded-full"></span>
+                    <span class="font-black text-white uppercase text-[10px]">Realtime Active</span>
                 </div>
-                <button onclick="location.reload()" class="text-slate-500 hover:text-white transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                </button>
+                <button onclick="location.reload()" class="text-slate-500 hover:text-white">⟳</button>
             </div>
         </header>
 
         <main class="p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-                <h3 class="column-title uppercase text-blue-400 mb-4 flex items-center">
-                    <span class="w-4 h-4 bg-blue-500 rounded-full dot-pulse mr-3"></span> À VALIDER 
-                    <span id="count-pending" class="step-badge text-blue-300">0</span>
-                </h3>
+                <h3 class="text-blue-400 mb-4 font-black flex items-center">À VALIDER <span id="count-pending" class="step-badge">0</span></h3>
                 <div id="col-pending" class="column-container"></div>
             </div>
             <div>
-                <h3 class="column-title uppercase text-orange-400 mb-4 flex items-center">
-                    <span class="w-4 h-4 bg-orange-500 rounded-full dot-pulse mr-3"></span> EN CUISINE 
-                    <span id="count-processing" class="step-badge text-orange-300">0</span>
-                </h3>
+                <h3 class="text-orange-400 mb-4 font-black flex items-center">EN CUISINE <span id="count-processing" class="step-badge">0</span></h3>
                 <div id="col-processing" class="column-container"></div>
             </div>
             <div>
-                <h3 class="column-title uppercase text-green-400 mb-4 flex items-center">
-                    <span class="w-4 h-4 bg-green-500 rounded-full mr-3"></span> PRÊTES 
-                    <span id="count-ready" class="step-badge text-green-300">0</span>
-                </h3>
+                <h3 class="text-green-400 mb-4 font-black flex items-center">PRÊTES <span id="count-ready" class="step-badge">0</span></h3>
                 <div id="col-ready" class="column-container"></div>
             </div>
         </main>
@@ -111,61 +80,32 @@
         const SUPABASE_URL = "https://bhtnjevdjntnzrxaksde.supabase.co";
         const SUPABASE_KEY = "sb_publishable_kJUhaTAw4xBCW0e3f5ketg_n_HcboDn"; 
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
         const audioAlert = new Audio('./alerte.mp3');
-        let ordersSubscription = null;
 
         async function checkAccess() {
-            const btn = document.getElementById('btn-entrer');
             const email = document.getElementById('email-input').value;
             const password = document.getElementById('pin-input').value;
-
-            if (!email || !password) return;
-            btn.innerText = "CONNEXION...";
-            btn.disabled = true;
-
-            try {
-                const { error } = await _supabase.auth.signInWithPassword({ email, password });
-                if (error) throw error;
-                
+            const { error } = await _supabase.auth.signInWithPassword({ email, password });
+            if (!error) {
                 document.getElementById('lock-screen').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
                 startSystem();
-            } catch (err) {
-                alert("Identifiants incorrects");
-                btn.innerText = "SE CONNECTER";
-                btn.disabled = false;
-            }
+            } else { alert("Erreur d'accès"); }
         }
 
         async function startSystem() { 
             await loadData(); 
-            if (ordersSubscription) _supabase.removeChannel(ordersSubscription);
-
-            ordersSubscription = _supabase
-                .channel('orders-realtime')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
-                    if (payload.eventType === 'INSERT') {
-                        triggerVisualAlert();
-                        audioAlert.play().catch(e => console.error(e));
-                    }
-                    loadData(); // On recharge tout pour avoir les jointures clients
-                })
-                .subscribe();
+            _supabase.channel('orders-realtime').on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (p) => {
+                if (p.eventType === 'INSERT') { triggerVisualAlert(); audioAlert.play(); }
+                loadData();
+            }).subscribe();
         }
 
         async function loadData() {
-            // On force la jointure avec la table clients
+            // Sélection explicite pour forcer la récupération du phone_number
             const { data, error } = await _supabase
                 .from('orders')
-                .select(`
-                    *,
-                    clients (
-                        id,
-                        name,
-                        phone_number
-                    )
-                `)
+                .select('*, clients!inner(name, phone_number)')
                 .neq('status', 'delivered')
                 .order('created_at', { ascending: false });
 
@@ -173,82 +113,58 @@
         }
 
         function triggerVisualAlert() {
-            const header = document.getElementById('header-main');
-            header.classList.add('alert-flash');
-            setTimeout(() => { header.classList.remove('alert-flash'); }, 4000);
-        }
-
-        function formatPizzas(notes) {
-            let items = [];
-            if (!notes) return '<div class="pizza-item">Aucun article</div>';
-            try { 
-                items = typeof notes === 'string' ? JSON.parse(notes) : notes; 
-            } catch (e) { 
-                return `<div class="pizza-item"><span class="pizza-name">${notes}</span></div>`; 
-            }
-            if (!Array.isArray(items)) return `<div class="pizza-item"><span class="pizza-name">${notes}</span></div>`;
-            
-            return items.map(p => {
-                const modifText = (p.modifications && p.modifications.trim() !== "") ? p.modifications : null;
-                return `
-                    <div class="pizza-item">
-                        <span class="pizza-size">${p.size || 'G'}</span>
-                        <span class="pizza-name">${p.name}</span>
-                        ${modifText ? `<span class="special-note">⚠️ ${modifText}</span>` : ""}
-                    </div>
-                `;
-            }).join('');
+            const h = document.getElementById('header-main');
+            h.classList.add('alert-flash');
+            setTimeout(() => h.classList.remove('alert-flash'), 4000);
         }
 
         function renderUI(orders) {
-            const zones = { 'pending': document.getElementById('col-pending'), 'processing': document.getElementById('col-processing'), 'ready-to-deliver': document.getElementById('col-ready') };
+            const zones = { 'pending': 'col-pending', 'processing': 'col-processing', 'ready-to-deliver': 'col-ready' };
             const counts = { 'pending': 0, 'processing': 0, 'ready-to-deliver': 0 };
-            Object.values(zones).forEach(z => z.innerHTML = '');
+            Object.values(zones).forEach(id => document.getElementById(id).innerHTML = '');
             
             orders.forEach(order => {
                 const status = order.status || 'pending';
                 if(counts.hasOwnProperty(status)) counts[status]++;
 
+                // --- GESTION DU CLIENT (EXTRACTION ROBUSTE) ---
+                let clientData = order.clients;
+                // Si Supabase renvoie un tableau, on prend le premier élément
+                if (Array.isArray(clientData)) clientData = clientData[0];
+                
+                const clientName = clientData?.name || "Client";
+                const clientPhone = clientData?.phone_number || "📞 Non renseigné";
+                // ----------------------------------------------
+
                 const type = (order.order_type || "").toLowerCase();
                 let typeHTML = type.includes("livraison") ? `<span class="type-badge type-livraison">🛵 LIVRAISON</span>` : (type.includes("emporter") ? `<span class="type-badge type-emporter">🛍️ EMPORTER</span>` : `<span class="type-badge type-place">🍽️ SUR PLACE</span>`);
                 
-                const dateObj = new Date(order.created_at);
-                const timeStr = dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
-                
+                const timeStr = new Date(order.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', 'h');
+                const adresse = (order.delivery_street_number || "") + " " + (order.delivery_street || "");
+                const ville = order.delivery_city || "";
+
                 const card = document.createElement('div');
                 card.className = `order-card ${status === 'processing' ? 'status-processing' : (status === 'ready-to-deliver' ? 'status-ready' : '')}`;
                 
                 let btns = status === 'pending' ? `<div class="grid grid-cols-3 gap-2 mt-3"><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">10M</button><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">20M</button><button onclick="updateStatus('${order.id}', 'processing')" class="btn-time">30M</button></div>` : (status === 'processing' ? `<button onclick="updateStatus('${order.id}', 'ready-to-deliver')" class="w-full mt-3 bg-orange-500 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">PRÊT ✅</button>` : `<button onclick="updateStatus('${order.id}', 'delivered')" class="w-full mt-3 bg-green-600 text-white py-3 rounded-xl font-black text-xs uppercase shadow-md">TERMINER</button>`);
                 
-                const num = order.delivery_street_number ? String(order.delivery_street_number).trim() : '';
-                const rue = order.delivery_street ? order.delivery_street.trim() : '';
-                const ville = order.delivery_city ? order.delivery_city.trim() : '';
-                let adresseAffichee = (num || rue) ? `${num} ${rue}`.trim() + (ville ? ` - ${ville}` : "") : "Boutique / Emporter";
-
-                // Sécurité Nom et Téléphone : on vérifie toutes les clés possibles
-                const clientObj = order.clients;
-                const clientName = clientObj ? (clientObj.name || clientObj.nom || "Client") : "Client";
-                const clientPhone = clientObj ? (clientObj.phone_number || clientObj.telephone || clientObj.phone || "N/A") : "N/A";
-
                 card.innerHTML = `
                     <div class="flex justify-between items-center mb-2 border-b pb-2">
                         <span class="order-time">${timeStr}</span>
-                        <span class="text-lg font-black text-blue-600">${parseFloat(order.total_price || order.total || 0).toFixed(2)}€</span>
+                        <span class="text-lg font-black text-blue-600">${parseFloat(order.total_price || 0).toFixed(2)}€</span>
                     </div>
-                    <div class="mb-3">${formatPizzas(order.items_json || order.delivery_notes)}</div>
+                    <div class="mb-3 text-[13px] font-bold text-slate-800">${order.delivery_notes || "Aucun détail"}</div>
                     <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-[11px]">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="font-black text-slate-900 uppercase truncate mr-1">👤 ${clientName}</span>
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-black text-slate-900 uppercase">👤 ${clientName}</span>
                             ${typeHTML}
                         </div>
-                        <div class="text-slate-500 font-bold mb-1 italic">📞 ${clientPhone}</div>
-                        <div class="border-t pt-1 mt-1">
-                            <span class="block text-slate-700 leading-tight font-bold">📍 ${adresseAffichee}</span>
-                        </div>
+                        <div class="text-blue-600 font-black mb-1 text-[12px]">📞 ${clientPhone}</div>
+                        <div class="border-t pt-1 mt-1 text-slate-600 font-bold">📍 ${adresse} ${ville}</div>
                     </div>
                     ${btns}
                 `;
-                if (zones[status]) zones[status].appendChild(card);
+                if (zones[status]) document.getElementById(zones[status]).appendChild(card);
             });
             
             document.getElementById('count-pending').innerText = counts['pending'];
@@ -256,9 +172,9 @@
             document.getElementById('count-ready').innerText = counts['ready-to-deliver'];
         }
 
-        async function updateStatus(orderId, newStatus) {
-            await _supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
-            loadData();
+        async function updateStatus(id, s) { 
+            await _supabase.from('orders').update({ status: s }).eq('id', id); 
+            loadData(); 
         }
     </script>
 </body>
