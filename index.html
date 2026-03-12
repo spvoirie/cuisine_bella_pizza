@@ -18,6 +18,7 @@
         .pizza-size { color: #3b82f6; font-weight: 800; font-size: 0.7rem; float: right; background: white; padding: 1px 6px; border-radius: 4px; border: 1px solid #e2e8f0; }
         .special-note { color: #dc2626; font-weight: 900; font-size: 0.75rem; display: block; margin-top: 2px; text-transform: uppercase; border-top: 1px dashed #fecaca; padding-top: 2px; }
         
+        /* Couleur Bleu Originale */
         .btn-time { background: #3b82f6; color: white; padding: 8px 0; border-radius: 10px; font-weight: 900; font-size: 0.75rem; transition: all 0.2s; }
         .btn-time:hover { background: #2563eb; transform: translateY(-2px); }
         
@@ -120,28 +121,16 @@
             const password = document.getElementById('pin-input').value;
 
             if (!email || !password) return;
-
             btn.innerText = "CONNEXION...";
             btn.disabled = true;
 
             try {
-                const { data, error } = await _supabase.auth.signInWithPassword({
-                    email: email,
-                    password: password,
-                });
-
+                const { error } = await _supabase.auth.signInWithPassword({ email, password });
                 if (error) throw error;
-
-                audioAlert.muted = true;
-                await audioAlert.play();
-                audioAlert.pause();
-                audioAlert.muted = false;
-
+                
                 document.getElementById('lock-screen').classList.add('hidden');
                 document.getElementById('main-app').classList.remove('hidden');
-                
                 startSystem();
-
             } catch (err) {
                 alert("Identifiants incorrects");
                 btn.innerText = "SE CONNECTER";
@@ -151,35 +140,36 @@
 
         async function startSystem() { 
             await loadData(); 
-
             if (ordersSubscription) _supabase.removeChannel(ordersSubscription);
 
             ordersSubscription = _supabase
                 .channel('orders-realtime')
-                .on(
-                    'postgres_changes', 
-                    { event: '*', schema: 'public', table: 'orders' }, 
-                    (payload) => {
-                        if (payload.eventType === 'INSERT') {
-                            triggerVisualAlert();
-                            audioAlert.play().catch(e => console.error("Erreur audio:", e));
-                        }
-                        loadData(); 
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
+                    if (payload.eventType === 'INSERT') {
+                        triggerVisualAlert();
+                        audioAlert.play().catch(e => console.error(e));
                     }
-                )
+                    loadData(); // On recharge tout pour avoir les jointures clients
+                })
                 .subscribe();
         }
 
         async function loadData() {
+            // On force la jointure avec la table clients
             const { data, error } = await _supabase
                 .from('orders')
-                .select('*, clients(*)')
+                .select(`
+                    *,
+                    clients (
+                        id,
+                        name,
+                        phone_number
+                    )
+                `)
                 .neq('status', 'delivered')
                 .order('created_at', { ascending: false });
 
-            if (!error) {
-                renderUI(data);
-            }
+            if (!error) renderUI(data);
         }
 
         function triggerVisualAlert() {
@@ -200,13 +190,11 @@
             
             return items.map(p => {
                 const modifText = (p.modifications && p.modifications.trim() !== "") ? p.modifications : null;
-                const instructionHTML = modifText ? `<span class="special-note">⚠️ ${modifText}</span>` : "";
-
                 return `
                     <div class="pizza-item">
                         <span class="pizza-size">${p.size || 'G'}</span>
                         <span class="pizza-name">${p.name}</span>
-                        ${instructionHTML}
+                        ${modifText ? `<span class="special-note">⚠️ ${modifText}</span>` : ""}
                     </div>
                 `;
             }).join('');
@@ -235,11 +223,12 @@
                 const num = order.delivery_street_number ? String(order.delivery_street_number).trim() : '';
                 const rue = order.delivery_street ? order.delivery_street.trim() : '';
                 const ville = order.delivery_city ? order.delivery_city.trim() : '';
-                
                 let adresseAffichee = (num || rue) ? `${num} ${rue}`.trim() + (ville ? ` - ${ville}` : "") : "Boutique / Emporter";
 
-                const clientName = order.clients?.name || order.clients?.nom || 'Client';
-                const clientPhone = order.clients?.phone_number || order.clients?.telephone || 'N/A';
+                // Sécurité Nom et Téléphone : on vérifie toutes les clés possibles
+                const clientObj = order.clients;
+                const clientName = clientObj ? (clientObj.name || clientObj.nom || "Client") : "Client";
+                const clientPhone = clientObj ? (clientObj.phone_number || clientObj.telephone || clientObj.phone || "N/A") : "N/A";
 
                 card.innerHTML = `
                     <div class="flex justify-between items-center mb-2 border-b pb-2">
@@ -268,8 +257,8 @@
         }
 
         async function updateStatus(orderId, newStatus) {
-            const { error } = await _supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
-            if (error) console.error("Erreur update status:", error);
+            await _supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
+            loadData();
         }
     </script>
 </body>
