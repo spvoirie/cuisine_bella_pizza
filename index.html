@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cuisine Live - Pizza Bella</title>
+    <title>SAIOS - Cuisine Live</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Lobster&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         body { background-color: #0f172a; color: white; font-family: 'Inter', sans-serif; }
-        .logo-font { font-family: 'Lobster', cursive; }
         .column-container { background: rgba(30, 41, 59, 0.3); min-height: 80vh; border-radius: 20px; padding: 12px; border: 1px solid rgba(255,255,255,0.05); }
-        .order-card { background: white; color: #1e293b; border-radius: 16px; padding: 15px; margin-bottom: 15px; border-left: 8px solid #3b82f6; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
+        .order-card { background: white; color: #1e293b; border-radius: 16px; padding: 15px; margin-bottom: 15px; border-left: 8px solid #00d2ff; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
         .status-processing { border-left-color: #f97316; }
         .status-ready { border-left-color: #22c55e; }
-        .pizza-item { background: #f1f5f9; border-radius: 8px; padding: 6px 10px; margin-bottom: 4px; border-left: 3px solid #3b82f6; }
+        .pizza-item { background: #f1f5f9; border-radius: 8px; padding: 6px 10px; margin-bottom: 4px; border-left: 3px solid #00d2ff; }
         .pizza-name { font-weight: 800; text-transform: uppercase; color: #0f172a; font-size: 0.95rem; }
         .pizza-size { color: #3b82f6; font-weight: 800; font-size: 0.7rem; float: right; background: white; padding: 1px 6px; border-radius: 4px; border: 1px solid #e2e8f0; }
         .special-note { color: #dc2626; font-weight: 900; font-size: 0.75rem; display: block; margin-top: 2px; text-transform: uppercase; border-top: 1px dashed #fecaca; padding-top: 2px; }
@@ -31,28 +30,46 @@
         @keyframes flashRed { 0%, 100% { background-color: #0f172a; } 50% { background-color: #dc2626; } }
         .alert-flash { animation: flashRed 0.8s ease-in-out 5; }
         .column-title { font-size: 1.8rem; font-weight: 900; }
+        
+        /* Style spécifique pour les inputs de connexion */
+        .auth-input { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 12px; width: 100%; color: white; outline: none; transition: border 0.2s; }
+        .auth-input:focus { border-color: #00d2ff; }
     </style>
 </head>
 <body>
 
     <div id="lock-screen" class="fixed inset-0 bg-[#0f172a] z-[100] flex items-center justify-center p-4">
-        <div class="bg-slate-900 p-8 rounded-3xl border border-slate-800 shadow-2xl w-full max-w-[320px] text-center">
-            <span class="text-5xl mb-2 block">🍕</span>
-            <h1 class="logo-font text-4xl text-white mb-6">Pizza <span class="text-red-500">Bella</span></h1>
-            <input type="password" id="pin-input" inputmode="numeric" placeholder="PIN" autofocus class="bg-slate-800 border-2 border-slate-700 rounded-xl p-3 text-center text-2xl w-full mb-4 text-white tracking-[0.3em] outline-none focus:border-red-500">
-            <button id="btn-entrer" onclick="checkAccess()" class="w-full bg-red-600 text-white font-black py-3 rounded-xl uppercase tracking-widest shadow-lg active:scale-95 transition-all">Entrer</button>
+        <div class="bg-slate-900 p-8 rounded-3xl border border-slate-800 shadow-2xl w-full max-w-[350px] text-center">
+            <img src="SAIOS logo 1.jpg" alt="SAIOS" class="w-40 mx-auto mb-8">
+            
+            <div class="space-y-4">
+                <input type="email" id="email-input" placeholder="Email restaurant" class="auth-input">
+                <input type="password" id="pin-input" placeholder="Mot de passe" class="auth-input text-center text-xl tracking-widest">
+                <button id="btn-entrer" onclick="checkAccess()" class="w-full bg-gradient-to-r from-blue-900 to-cyan-500 text-white font-black py-4 rounded-xl uppercase tracking-widest shadow-lg active:scale-95 transition-all">
+                    Se connecter
+                </button>
+            </div>
+            <p class="text-slate-500 text-[10px] mt-6 uppercase tracking-widest">Powered by SAIOS Technologies</p>
         </div>
     </div>
 
     <div id="main-app" class="hidden min-h-screen flex flex-col">
         <header id="header-main" class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900 sticky top-0 z-50">
             <div class="flex items-center gap-3">
-                <span class="text-3xl">🍕</span>
-                <h1 class="logo-font text-2xl text-white">Pizza Bella</h1>
+                <img src="SAIOS logo 1.jpg" alt="SAIOS" class="h-8">
+                <div class="h-6 w-[1px] bg-slate-700 mx-2"></div>
+                <h1 class="font-black text-sm text-slate-400 uppercase tracking-tighter">Cuisine <span class="text-white">Live</span></h1>
             </div>
-            <div class="flex items-center gap-2 bg-slate-800 px-4 py-1.5 rounded-full border border-slate-700">
-                <span class="w-2.5 h-2.5 bg-green-500 rounded-full dot-pulse"></span>
-                <span class="font-black text-xs tracking-widest text-white uppercase">REALTIME ACTIVE</span>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 bg-slate-800 px-4 py-1.5 rounded-full border border-slate-700">
+                    <span class="w-2.5 h-2.5 bg-green-500 rounded-full dot-pulse"></span>
+                    <span class="font-black text-xs tracking-widest text-white uppercase">Connecté</span>
+                </div>
+                <button onclick="location.reload()" class="text-slate-500 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                </button>
             </div>
         </header>
 
@@ -89,43 +106,50 @@
         const audioAlert = new Audio('./alerte.mp3');
         let ordersSubscription = null;
 
-        document.getElementById('pin-input').addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                checkAccess();
-            }
-        });
+        // --- GESTION ACCÈS ---
 
         async function checkAccess() {
             const btn = document.getElementById('btn-entrer');
-            const pinInput = document.getElementById('pin-input');
-            const pinSaisi = pinInput.value;
-            if (!pinSaisi) return;
+            const email = document.getElementById('email-input').value;
+            const password = document.getElementById('pin-input').value;
+
+            if (!email || !password) {
+                alert("Merci de saisir vos identifiants");
+                return;
+            }
+
             btn.innerText = "VÉRIFICATION...";
             btn.disabled = true;
+
             try {
-                const { data, error } = await _supabase.from('config_securite').select('valeur_cle').eq('nom_cle', 'pin_cuisine').single();
-                if (data && data.valeur_cle === pinSaisi) {
-                    audioAlert.muted = true;
-                    await audioAlert.play();
-                    audioAlert.pause();
-                    audioAlert.muted = false;
-                    document.getElementById('lock-screen').classList.add('hidden');
-                    document.getElementById('main-app').classList.remove('hidden');
-                    startSystem();
-                } else {
-                    alert("Code PIN incorrect");
-                    btn.innerText = "ENTRER";
-                    btn.disabled = false;
-                    pinInput.value = "";
-                    pinInput.focus();
-                }
+                // Tentative de connexion Supabase Auth
+                const { data, error } = await _supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password,
+                });
+
+                if (error) throw error;
+
+                // Si succès
+                audioAlert.muted = true;
+                await audioAlert.play();
+                audioAlert.pause();
+                audioAlert.muted = false;
+
+                document.getElementById('lock-screen').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                
+                startSystem();
+
             } catch (err) {
-                alert("Erreur de connexion");
-                btn.innerText = "ENTRER";
+                alert("Identifiants incorrects ou erreur réseau");
+                console.error(err);
+                btn.innerText = "SE CONNECTER";
                 btn.disabled = false;
             }
         }
+
+        // --- LOGIQUE SYSTÈME ---
 
         async function startSystem() { 
             await loadData(); 
@@ -149,6 +173,7 @@
         }
 
         async function loadData() {
+            // Les règles RLS s'occupent de filtrer automatiquement par restaurant_id
             const { data, error } = await _supabase
                 .from('orders')
                 .select('*, clients(*)')
@@ -157,6 +182,8 @@
 
             if (!error) {
                 renderUI(data);
+            } else {
+                console.error("Erreur de chargement:", error);
             }
         }
 
@@ -177,7 +204,6 @@
             if (!Array.isArray(items)) return `<div class="pizza-item"><span class="pizza-name">${notes}</span></div>`;
             
             return items.map(p => {
-                // Utilisation du champ "modifications" renvoyé par ElevenLabs
                 const modifText = (p.modifications && p.modifications.trim() !== "") ? p.modifications : null;
                 const instructionHTML = modifText ? `<span class="special-note">⚠️ ${modifText}</span>` : "";
 
@@ -220,7 +246,7 @@
                 card.innerHTML = `
                     <div class="flex justify-between items-center mb-2 border-b pb-2">
                         <span class="order-time">${timeStr}</span>
-                        <span class="text-lg font-black text-red-600">${parseFloat(order.total_price || order.total || 0).toFixed(2)}€</span>
+                        <span class="text-lg font-black text-blue-600">${parseFloat(order.total_price || order.total || 0).toFixed(2)}€</span>
                     </div>
                     <div class="mb-3">${formatPizzas(order.items_json || order.delivery_notes)}</div>
                     <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-[11px]">
